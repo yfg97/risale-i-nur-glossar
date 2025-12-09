@@ -1,82 +1,341 @@
 ---
 import { getCollection } from "astro:content";
+import "@fontsource/open-sans";
 
-import Layout from "@/layouts/Layout.astro";
-import SocialLinks from "@/components/SocialLinks.astro";
-import PostCard from "@/components/PostCard.astro";
-import ProjectCard from "@/components/ProjectCard.astro";
-import Link from "@/components/shared/Link.astro";
-import convertAsteriskToStrongTag from "@/utils/convertAsteriskToStrongTag";
+// Sammle alle veröffentlichten Begriffe
+const allBegriffe = await getCollection("begriffe", ({ data }) => {
+  return data.isPublish === true;
+});
 
-import presentation from "@/data/presentation";
-import projects from "@/data/projects";
+// Sortiere alphabetisch nach deutschem Begriff
+const sortedBegriffe = allBegriffe.sort((a, b) =>
+  a.data.term_de.localeCompare(b.data.term_de, "de")
+);
 
-const posts = await getCollection("posts");
+// Erstelle Daten für Fuse.js
+const begriffeData = sortedBegriffe.map((begriff) => ({
+  term_de: begriff.data.term_de,
+  term_tr: begriff.data.term_tr,
+  term_os: begriff.data.term_os,
+  category: begriff.data.category,
+  slug: begriff.slug,
+}));
+
+// Kategorie-Farben Mapping
+const categoryColors = {
+  Theologie: "bg-category-theologie",
+  Recht: "bg-category-recht",
+  Mystik: "bg-category-mystik",
+  Allgemein: "bg-category-allgemein",
+  Grammatik: "bg-category-grammatik",
+};
 ---
 
-<Layout>
-  <main class="flex flex-col gap-20">
-    <article class="flex flex-col gap-8">
-      <h1 class="text-3xl text-neutral-100">{presentation.title}</h1>
-      <h2
-        class="max-w-[60ch] leading-6"
-        set:html={convertAsteriskToStrongTag(presentation.description)}
-      />
-      <SocialLinks />
-    </article>
+<!doctype html>
+<html lang="de" dir="ltr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MÂNA     المعنى       | Risale-i Nur</title>
+    <meta
+      name="description"
+      content="Digitales Glossar osmanischer und türkischer theologischer Begriffe mit deutschen Übersetzungen"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body class="bg-paper text-ink min-h-screen">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b border-paper-dark">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <h1 class="text-3xl md:text-4xl font-bold text-ink text-center">
+          MÂNA     المعنى
+        </h1>
+        <p class="text-center text-ink-lighter mt-2 text-sm md:text-base">
+          Ein Online-Glossar für die Übersetzungen der Said Nursi Stiftung
+        </p>
+      </div>
+    </header>
 
-    <article class="flex flex-col gap-8">
-      <header class="flex w-full flex-row justify-between gap-2">
-        <h3 class="text-lg text-neutral-100">Latest posts</h3>
-        <Link href="/posts" label="See all posts" isUnderline target="_self" />
-      </header>
-      {posts.length === 0 && <p>Soon, stay connected 👀...</p>}
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <!-- Search & Filter Section -->
+      <div class="mb-8 space-y-4">
+        <!-- Search Bar -->
+        <div class="relative">
+          <input
+            type="text"
+            id="searchInput"
+            placeholder="Begriff suchen (z.B. 'iman', 'sahsi manevi', 'glaube')..."
+            class="w-full px-4 py-3 pl-12 text-lg border border-accent-light rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent bg-white"
+          />
+          <svg
+            class="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-accent-light"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+          </svg>
+        </div>
 
-      <section class="flex flex-col gap-4 md:flex-row md:flex-wrap">
-        {
-          posts.length !== 0 &&
-            posts
-              .slice(0, 2)
-              .map((post) => (
-                <PostCard
-                  publishedAt={post.data.publishedAt}
-                  title={post.data.title}
-                  description={post.data.description}
-                  slug={post.slug}
-                />
+        <!-- A-Z Filter -->
+        <div class="bg-white rounded-lg shadow-sm p-4 border border-paper-dark">
+          <div class="flex flex-wrap gap-2 justify-center items-center">
+            <span class="text-sm text-ink-lighter font-medium mr-2"
+              >Filter:</span
+            >
+            <button
+              class="filter-btn px-3 py-1 rounded-md text-sm font-medium transition-colors bg-accent text-white hover:bg-accent-dark"
+              data-letter="all"
+            >
+              Alle
+            </button>
+            {
+              "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("").map((letter) => (
+                <button
+                  class="filter-btn px-3 py-1 rounded-md text-sm font-medium transition-colors bg-paper-dark text-ink hover:bg-accent hover:text-white"
+                  data-letter={letter}
+                >
+                  {letter}
+                </button>
               ))
-        }
-      </section>
-    </article>
+            }
+          </div>
+        </div>
 
-    <article class="flex flex-col gap-8">
-      <header class="flex w-full flex-row justify-between gap-2">
-        <h3 class="text-lg text-neutral-100">
-          Selected projects ({projects.length})
-        </h3>
-      </header>
-      {projects.length === 0 && <p>Oops, I must work^^^^^</p>}
+        <!-- Results Counter -->
+        <div class="text-center">
+          <p id="resultsCounter" class="text-ink-lighter text-sm">
+            <span id="resultCount">{begriffeData.length}</span> Begriffe gefunden
+          </p>
+        </div>
+      </div>
 
-      <section class="flex flex-col gap-4">
+      <!-- Begriffe Grid -->
+      <div
+        id="begriffeGrid"
+        class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+      >
         {
-          projects.length !== 0 &&
-            projects.map((project) => <ProjectCard {...project} />)
+          sortedBegriffe.map((begriff) => (
+            <div
+              class="begriff-card bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300 p-6 border border-paper-dark"
+              data-term-de={begriff.data.term_de}
+              data-term-tr={begriff.data.term_tr}
+              data-term-os={begriff.data.term_os}
+              data-category={begriff.data.category}
+            >
+              {/* Türkisch (oben links) */}
+              <div class="mb-3">
+                <h3 class="text-xl font-bold text-ink">{begriff.data.term_tr}</h3>
+              </div>
+
+              {/* Osmanisch (oben rechts, groß und schön) */}
+              <div class="mb-4 text-right">
+                <p
+                  class="text-3xl font-arabic text-accent"
+                  dir="rtl"
+                  lang="ar"
+                >
+                  {begriff.data.term_os}
+                </p>
+              </div>
+
+              {/* Deutsche Übersetzung (Mitte) */}
+              <div class="mb-4 text-center py-3 border-t border-b border-paper-dark">
+                <p class="text-lg text-ink-light font-medium">
+                  {begriff.data.term_de}
+                </p>
+              </div>
+
+              {/* Kategorie Label (unten) */}
+              <div class="flex justify-center">
+                <span
+                  class={`inline-block px-3 py-1 rounded-full text-xs font-semibold text-white ${categoryColors[begriff.data.category]}`}
+                >
+                  {begriff.data.category}
+                </span>
+              </div>
+            </div>
+          ))
         }
-      </section>
-    </article>
+      </div>
 
-    <article class="flex flex-col gap-8">
-      <header class="flex w-full flex-row justify-between gap-2">
-        <h3 class="text-lg text-neutral-100">Get in touch</h3>
-      </header>
-      <p>
-        Email me at <Link
-          href={`mailto:${presentation.mail}`}
-          label={presentation.mail}
-        /> or follow me via my social links.
-      </p>
+      <!-- No Results Message -->
+      <div
+        id="noResults"
+        class="hidden text-center py-12"
+      >
+        <svg
+          class="mx-auto h-12 w-12 text-ink-lighter"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+          ></path>
+        </svg>
+        <h3 class="mt-4 text-lg font-medium text-ink">Keine Begriffe gefunden</h3>
+        <p class="mt-2 text-sm text-ink-lighter">
+          Versuchen Sie es mit einer anderen Suche oder einem anderen Filter.
+        </p>
+      </div>
+    </main>
 
-      <SocialLinks />
-    </article>
-  </main>
-</Layout>
+    <!-- Footer -->
+    <footer class="bg-white border-t border-paper-dark mt-16">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 text-center">
+        <p class="text-ink-lighter text-sm">
+          Osmanisch-Deutsches Glossar • Basierend auf Risale-i Nur
+        </p>
+      </div>
+    </footer>
+
+    <!-- Fuse.js CDN -->
+    <script
+      src="https://cdn.jsdelivr.net/npm/fuse.js@7.0.0/dist/fuse.min.js"
+    ></script>
+
+    <!-- Search & Filter Logic -->
+    <script is:inline define:vars={{ begriffeData }}>
+      // Warte bis Fuse.js geladen ist
+      window.addEventListener('load', function() {
+        // Helper: Normalisiere String (entferne Diakritika/Sonderzeichen)
+        function normalizeString(str) {
+          return str
+            .toLowerCase()
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "") // Entferne Diakritika
+            .replace(/[ğ]/g, "g")
+            .replace(/[ı]/g, "i")
+            .replace(/[ö]/g, "o")
+            .replace(/[ü]/g, "u")
+            .replace(/[ş]/g, "s")
+            .replace(/[ç]/g, "c")
+            .replace(/[â]/g, "a")
+            .replace(/[î]/g, "i")
+            .replace(/[û]/g, "u")
+            .replace(/[-']/g, ""); // Entferne Bindestriche und Apostrophe
+        }
+
+        // Normalisiere die Daten für die Suche
+        const normalizedData = begriffeData.map((item) => ({
+          ...item,
+          term_de_normalized: normalizeString(item.term_de),
+          term_tr_normalized: normalizeString(item.term_tr),
+        }));
+
+        // Fuse.js Konfiguration
+        const fuse = new Fuse(normalizedData, {
+          keys: ["term_de_normalized", "term_tr_normalized", "term_de", "term_tr"],
+          threshold: 0.3, // Fehlertoleranz (0 = exakt, 1 = alles)
+          ignoreLocation: true,
+          minMatchCharLength: 2,
+        });
+
+        // DOM Elemente
+        const searchInput = document.getElementById("searchInput");
+        const begriffeCards = document.querySelectorAll(".begriff-card");
+        const filterButtons = document.querySelectorAll(".filter-btn");
+        const noResults = document.getElementById("noResults");
+        const resultCount = document.getElementById("resultCount");
+        const begriffeGrid = document.getElementById("begriffeGrid");
+
+        let currentFilter = "all";
+
+        // Funktion: Filtere und zeige Begriffe
+        function filterAndDisplay() {
+          const searchTerm = normalizeString(searchInput.value.trim());
+          let visibleCount = 0;
+
+          // Wenn Suchbegriff vorhanden, verwende Fuse.js
+          if (searchTerm.length > 0) {
+            const results = fuse.search(searchTerm);
+            const resultSlugs = results.map((r) => r.item.slug);
+
+            begriffeCards.forEach((card) => {
+              const termDe = card.dataset.termDe;
+              const termTr = card.dataset.termTr;
+              const matchingItem = normalizedData.find(
+                (item) => item.term_de === termDe && item.term_tr === termTr
+              );
+
+              const matchesSearch = resultSlugs.includes(matchingItem?.slug);
+              const matchesFilter =
+                currentFilter === "all" ||
+                termDe.toUpperCase().startsWith(currentFilter);
+
+              if (matchesSearch && matchesFilter) {
+                card.style.display = "block";
+                visibleCount++;
+              } else {
+                card.style.display = "none";
+              }
+            });
+          } else {
+            // Keine Suche, nur Filter anwenden
+            begriffeCards.forEach((card) => {
+              const termDe = card.dataset.termDe;
+              const matchesFilter =
+                currentFilter === "all" ||
+                termDe.toUpperCase().startsWith(currentFilter);
+
+              if (matchesFilter) {
+                card.style.display = "block";
+                visibleCount++;
+              } else {
+                card.style.display = "none";
+              }
+            });
+          }
+
+          // Zeige "Keine Ergebnisse" wenn nötig
+          if (visibleCount === 0) {
+            begriffeGrid.style.display = "none";
+            noResults.classList.remove("hidden");
+          } else {
+            begriffeGrid.style.display = "grid";
+            noResults.classList.add("hidden");
+          }
+
+          resultCount.textContent = visibleCount;
+        }
+
+        // Event Listener: Suche
+        searchInput.addEventListener("input", filterAndDisplay);
+
+        // Event Listener: A-Z Filter
+        filterButtons.forEach((btn) => {
+          btn.addEventListener("click", () => {
+            // Aktualisiere aktiven Button
+            filterButtons.forEach((b) => {
+              b.classList.remove("bg-accent", "text-white");
+              b.classList.add("bg-paper-dark", "text-ink");
+            });
+            btn.classList.remove("bg-paper-dark", "text-ink");
+            btn.classList.add("bg-accent", "text-white");
+
+            // Setze Filter
+            currentFilter = btn.dataset.letter;
+            filterAndDisplay();
+          });
+        });
+
+        console.log("Glossar initialisiert - Suche und Filter sind bereit!");
+      });
+    </script>
+  </body>
+</html>

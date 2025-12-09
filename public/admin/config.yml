@@ -1,26 +1,69 @@
 backend:
-  name: github
-  repo: gxanshu/astro-decap-cms-starter #replace with your githu repo
+  name: git-gateway
   branch: main
-  squash_merges: true
-  open_authoring: true
+
+# Für lokale Entwicklung: Nutze den Test-Backend Modus
+local_backend: true
 
 publish_mode: editorial_workflow
 media_folder: public/images
 public_folder: /images
-site_url: "https://astro-decapcms-starter.netlify.app/" # your site name
+site_url: "https://glossar.risale-i-nur.de"
 
 collections:
-  - name: post
-    label: Posts
-    folder: src/content/posts
+  - name: begriffe
+    label: Begriffe
+    label_singular: Begriff
+    folder: src/content/begriffe
     create: true
     format: frontmatter
-    preview_path: post/{{slug}}
+    slug: "{{term_de}}"
+    preview_path: begriff/{{slug}}
+    editor:
+      preview: false
     fields:
-      - { name: title, label: Title }
-      - { name: description, label: Description }
-      - { name: publishedAt, label: Date, widget: date }
-      - {label: "Publish", name: "isPublish", widget: "boolean", default: true}
-      - {label: "Draft", name: "isDraft", widget: "boolean", default: false}
-      - { name: body, label: Body, widget: markdown }
+      - {
+          name: term_de,
+          label: "Deutscher Begriff",
+          widget: string,
+          hint: "Dient als Titel und Slug (z.B. 'Glaube', 'Geistige Persönlichkeit')"
+        }
+      - {
+          name: term_tr,
+          label: "Türkisch (Latein)",
+          widget: string,
+          hint: "Kann auch Wortgruppen enthalten (z.B. 'Şahs-ı mânevî', 'İman')"
+        }
+      - {
+          name: term_os,
+          label: "Osmanisch / Arabisch",
+          widget: string,
+          hint: "RTL-Schrift (z.B. 'إيمان', 'شخص معنوی')",
+          pattern: ['.*', "Bitte osmanische/arabische Schrift eingeben"]
+        }
+      - {
+          name: category,
+          label: Kategorie,
+          widget: select,
+          options: ["Theologie", "Recht", "Mystik", "Allgemein", "Grammatik"],
+          default: "Allgemein"
+        }
+      - {
+          name: body,
+          label: Definition,
+          widget: markdown,
+          hint: "Ausführliche Erklärung des Begriffs"
+        }
+      - {
+          name: source_ref,
+          label: "Quelle/Referenz",
+          widget: string,
+          required: false,
+          hint: "z.B. 'Sözler, S. 123' oder 'Mektubat, 15. Brief'"
+        }
+      - {
+          name: isPublish,
+          label: "Veröffentlicht",
+          widget: boolean,
+          default: true
+        }
