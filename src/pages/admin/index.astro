@@ -1,0 +1,91 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex" />
+  <title>Content Manager - Osmanisch-Deutsches Glossar</title>
+  <script>
+    window.CMS_MANUAL_INIT = true;
+  </script>
+</head>
+<body>
+  <!-- Include the script that builds the page and powers Decap CMS -->
+  <script src="https://unpkg.com/decap-cms@^3.0.0/dist/decap-cms.js"></script>
+
+  <!-- Initialize CMS with config -->
+  <script>
+    CMS.init({
+      config: {
+        backend: {
+          name: 'test-repo'
+        },
+        local_backend: true,
+        media_folder: 'public/images',
+        public_folder: '/images',
+        collections: [
+          {
+            name: 'begriffe',
+            label: 'Begriffe',
+            label_singular: 'Begriff',
+            folder: 'src/content/begriffe',
+            create: true,
+            extension: 'md',
+            format: 'frontmatter',
+            slug: '{{term_de}}',
+            editor: {
+              preview: false
+            },
+            fields: [
+              {
+                name: 'term_de',
+                label: 'Deutscher Begriff',
+                widget: 'string',
+                hint: 'Dient als Titel und Slug (z.B. "Glaube", "Geistige Persönlichkeit")'
+              },
+              {
+                name: 'term_tr',
+                label: 'Türkisch (Latein)',
+                widget: 'string',
+                hint: 'Kann auch Wortgruppen enthalten (z.B. "Şahs-ı mânevî", "İman")'
+              },
+              {
+                name: 'term_os',
+                label: 'Osmanisch / Arabisch',
+                widget: 'string',
+                hint: 'RTL-Schrift (z.B. "إيمان", "شخص معنوی")'
+              },
+              {
+                name: 'category',
+                label: 'Kategorie',
+                widget: 'select',
+                options: ['Theologie', 'Recht', 'Mystik', 'Allgemein', 'Grammatik'],
+                default: 'Allgemein'
+              },
+              {
+                name: 'body',
+                label: 'Definition',
+                widget: 'markdown',
+                hint: 'Ausführliche Erklärung des Begriffs'
+              },
+              {
+                name: 'source_ref',
+                label: 'Quelle/Referenz',
+                widget: 'string',
+                required: false,
+                hint: 'z.B. "Sözler, S. 123" oder "Mektubat, 15. Brief"'
+              },
+              {
+                name: 'isPublish',
+                label: 'Veröffentlicht',
+                widget: 'boolean',
+                default: true
+              }
+            ]
+          }
+        ]
+      }
+    });
+  </script>
+</body>
+</html>
